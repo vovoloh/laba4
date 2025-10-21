@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace laba4
 {
@@ -14,8 +15,8 @@ namespace laba4
 
         interface IGrade
         {
-            double Average(); 
-            bool HasExcellent();  
+            double Average();
+            bool HasExcellent();
         }
         class Student : IStudentInfo, IGrade
         {
@@ -60,8 +61,8 @@ namespace laba4
 
             public bool HasExcellent()
             {
-                int countTwo = Grades.Count(grade => grade == 5);
-                return countTwo >= 3;
+                int countFive = Grades.Count(grade => grade == 5);
+                return countFive >= 5;
             }
         }
 
@@ -78,6 +79,20 @@ namespace laba4
         }
 
         static List<Institute> institutes = new List<Institute>();
+        delegate void Delegate(Student student);
+        static void SStudentInfo(Student student)
+        {
+            Console.WriteLine($"{student.Name} | Институт: {student.Institute} | Группа: {student.Group} | Курс: {student.Course}");
+        }
+        static void StudentGrades(Student student)
+        {
+            Console.WriteLine($"Оценки: {string.Join(" ", student.Grades)} | Средний балл:{student.Average()}");
+        }
+        static void StudentExcelent(Student student)
+        {
+            string Five = student.HasExcellent() ? "Отличник" : "Не отличник";
+            Console.WriteLine(Five);
+        }
         static void Main(string[] args)
         {
             while (true)
@@ -113,7 +128,6 @@ namespace laba4
             institutes.Add(new Institute { Name = name });
             Console.WriteLine("Институт добавлен");
         }
-
         static void AddGroup()
         {
             if (institutes.Count == 0)
@@ -133,7 +147,6 @@ namespace laba4
             institutes[instIndex].Groups.Add(new Group { Name = name });
             Console.WriteLine("Группа добавлена");
         }
-
         static void AddStudent()
         {
             if (institutes.Count == 0)
@@ -176,7 +189,6 @@ namespace laba4
             institutes[instIndex].Groups[grpIndex].Students.Add(newStudent);
             Console.WriteLine("Студент добавлен");
         }
-
         static void ShowAllStudents()
         {
             bool studentsFound = false;
@@ -201,6 +213,7 @@ namespace laba4
                 Console.WriteLine("Студентов нет");
             }
         }
+
 
         static void SaveToFile()
         {
@@ -320,13 +333,13 @@ namespace laba4
                 Console.WriteLine("Нет студентов для проверки");
                 return;
             }
-
-            var student = institutes.First().Groups.First().Students.First();
-
-            Console.WriteLine(" Проверка интерфейсов ");
-            student.ShowInfo();
-            Console.WriteLine($"Средний балл: {student.Average()}");
-            Console.WriteLine(student.HasExcellent() ? "<Больше трех пятерок" : "Меньше трех пятерок");
+            Delegate students = SStudentInfo;
+            students += StudentGrades;
+            students += StudentExcelent;
+            foreach(var student in institutes.SelectMany(i => i.Groups).SelectMany(g=>g.Students))
+            {
+                students(student);
+            }
         }
     }
 }
